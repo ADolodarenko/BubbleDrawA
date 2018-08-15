@@ -26,14 +26,30 @@ public class BubbleView extends ImageView implements View.OnTouchListener
     {
         super(context, attributeSet);
         bubbleList = new ArrayList<>();
-        testBubbles();
+        //testBubbles();
+
+        setOnTouchListener(this);
     }
+
+    private Runnable r = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            for (Bubble b : bubbleList)
+                b.update();
+
+            invalidate();
+        }
+    };
 
     @Override
     protected void onDraw(Canvas canvas)
     {
         for (Bubble b : bubbleList)
             b.draw(canvas);
+
+        h.postDelayed(r, delay);
     }
 
     public void testBubbles()
@@ -52,7 +68,32 @@ public class BubbleView extends ImageView implements View.OnTouchListener
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent)
     {
-        return false;
+        int pointers = motionEvent.getPointerCount();
+
+        if (pointers > 1)
+        {
+            for (int n = 0; n < pointers; n++)
+            {
+                int x = (int) motionEvent.getX(n);
+                int y = (int) motionEvent.getY(n);
+                int s = 2 * size - (2 * (n + 1));
+
+                if (s < size)
+                    s = size;
+
+                bubbleList.add(new Bubble(x, y, s));
+            }
+        }
+        else
+        {
+            int x = (int) motionEvent.getX();
+            int y = (int) motionEvent.getY();
+            int s = 2 * size;
+
+            bubbleList.add(new Bubble(x, y, s, 15, 15));
+        }
+
+        return true;
     }
 
     private class Bubble
@@ -89,6 +130,21 @@ public class BubbleView extends ImageView implements View.OnTouchListener
                 else
                     xSpeed = 1;
             }
+        }
+
+        public Bubble(int newX, int newY, int newSize, int newXSpeed, int newYSpeed)
+        {
+            x = newX;
+            y = newY;
+            size = newSize;
+
+            color = Color.argb(rand.nextInt(256),
+                    rand.nextInt(256),
+                    rand.nextInt(256),
+                    rand.nextInt(256));
+
+            xSpeed = newXSpeed;
+            ySpeed = newYSpeed;
         }
 
         public void update()
